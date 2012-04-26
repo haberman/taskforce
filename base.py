@@ -34,3 +34,83 @@ def MonkeyPatchSpawnVe()
 if os.name == "nt":
   MonkeyPatchSpawnVe()
 
+
+class BuildPaths:
+  def __init__(srcdir, builddir):
+    self.srcdir = srcdir
+    self.builddir = builddir
+
+class PollingMonitor:
+  """stat()-based prerequisite monitor.
+
+  Evaluates prerequisities by stat'ing the filesystem, detects changes by
+  polling (though the polling interval can be set to -1 to only do a single
+  traversal).  When appropriate, will execute the following task state
+  transitions:
+    UNKNOWN -> {UNSATISFIED, RUNNABLE, DONE}
+    UNSATISFIED -> RUNNABLE
+
+  Subscribes to task changes to notice when a task completion may have made
+  other tasks runnable."""
+
+class SpawnRunner:
+  """Task runner that executes a single task with os.spawnv().
+
+  Given a RUNNABLE task to execute, handles spawning it with the correct
+  cmd/args/env, supplying stdin, collecting stdout/stderr and return status.
+  When appropriate, will execute the following task state transitions:
+    RUNNABLE -> {RUNNING, ERROR}
+    RUNNING -> {ERROR, DONE}
+
+  When the job finishes, will update the task, passing the appropriate
+  TaskResult."""
+
+class Scheduler:
+  """Task scheduler that will run at most N runnable tasks in parallel.
+
+  Given the set of currently RUNNABLE tasks, picks up to N of them and
+  creates runners that will execute them."""
+
+
+
+  def unsatisfied(self):
+    """Returns the set of unsatisfied tasks.
+
+    An unsatisfied task is one whose output(s) have not been built from
+    the current version of its dependency closure."""
+    pass
+
+  def runnable(self):
+    """Returns the set of runnable tasks.
+
+    A runnable task is an unsatisfied task whose direct dependencies are
+    currently available."""
+    pass
+
+
+  def spawn(self, task):
+    """Spawns the given task, which must be runnable."""
+    assert(task.state == RUNNABLE)
+    task.pid = os.spawnve(os.P_NOWAIT, task.path(), task.args(), task.env())
+    task.state = RUNNING
+    self.running.add(task)
+
+  def reap(self):
+    """Does a non-blocking test to see if any running tasks have finished.
+
+    If a finished task was found, returns it, otherwise returns None."""
+    for task in self.running:
+      assert(task.state == RUNNING)
+      os.waitpid(task.
+    pass
+
+  def wait(self)
+    """Waits for a running process to finish.
+
+    Like reap(), but blocks until at least one task has finished.
+    Unfortuantely it is impossible to support a blocking timeout, because
+    the only way to implement such a thing in Linux AFAIK is to install
+    a signal handler, but that is an unacceptable power grab within the process
+    IMO.
+    """
+    pass
