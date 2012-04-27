@@ -1,3 +1,10 @@
+#
+# TaskForce - a flexible, modular build system.
+#
+# Copyright 2012 Google Inc.  See LICENSE for details.
+# Author: Josh Haberman <jhaberman@gmail.com>
+#
+
 """Basic TaskForce components for simple filesystem-based operation.
 
 These classes contain implementations of a traditional Make-based approach.
