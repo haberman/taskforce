@@ -49,17 +49,6 @@ class FilePath:
   def __init__(self, path)
     """Initializes the object with the given path.
 
-    Paths can be in one of the following forms:
-      * foo/bar/baz (relative to the source tree)
-      * #/foo/bar/baz (relative to the build tree)
-      * @/foo/bar/baz (relative to the output tree)
-
-    Since any of these three trees could be colocated, it is not allowed
-    to have both foo/bar and #/foo/bar.  In other words, the different
-    trees are not independent namespaces.
-
-    Paths may not contain "../" (which is disallowed) or "./" (which is
-    unnecessary and complicates things).
 
     """
 
@@ -89,6 +78,18 @@ class Task:
       * stdin: a string specifying the stdin to supply to the process
       * (add capture_stderr and capture_stdout as options if the efficiency of
         always capturing them is an issue)
+
+    Paths can be in one of the following forms:
+      * foo/bar/baz (relative to the source tree)
+      * #/foo/bar/baz (relative to the build tree)
+      * @/foo/bar/baz (relative to the output tree)
+
+    Since any of these three trees could be colocated, it is not allowed
+    to have both foo/bar and #/foo/bar.  In other words, the different
+    trees are not independent namespaces.
+
+    Paths may not contain "../" (which is disallowed) or "./" (which is
+    unnecessary and complicates things).
 
     """
 
