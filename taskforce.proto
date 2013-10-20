@@ -1,0 +1,77 @@
+
+package taskforce;
+
+message Task {
+  // Unique id for this task, hash of data therein.
+  optional string id = 1;
+
+  // Dependencies of this task.
+  //
+  // These are file paths relative to the base of the tree, and they may not
+  // contain "./" or "../".  However, they may start with "/".
+  repeated string source = 2;
+
+  // Outputs of this task.
+  //
+  // These are file paths relative to the base of the tree, and they may not
+  // contain "./" or "../", and may not start with "/" (all targets must be
+  // within the tree).
+  repeated string target = 3;
+
+  // The command to be run and all arguments.  These will be passed directly to
+  // exec() and will not be interpreted by any shell.
+  //
+  // The current directory will be the base of the tree.
+  repeated string arg = 4;
+
+  // Environment variables in VAR=val format.  The environment will be
+  // completely cleared except for the variables listed here.
+  repeated string env = 5;
+}
+
+message Job {
+  // Unique id for this job.  Hash of task id and source ids.
+  optional string id = 1;
+
+  enum State {
+    RUNNABLE = 0;
+    RUNNING = 1;
+    SUCCESS = 2;
+    ERROR = 3;
+  }
+
+  optional State state = 2;
+
+  // Corresponding task id.
+  optional string task_id = 3;
+
+  // Ids of sources, array elements correspond to task.source.
+  repeated string source_id = 4;
+
+  // Ids of targets, array elements correspond to task.target.
+  // Only present when state == SUCCESS.
+  repeated string target_id = 5;
+
+  // The time at which the job was created in state RUNNABLE.
+  optional int64 created_usec = 6;
+
+  // Present unless the state is RUNNABLE, the time at which the task started
+  // running.
+  optional int64 started_usec = 7;
+
+  // Present only while the state is RUNNING.
+  optional int32 pid = 8;
+
+  // All of the following members are present when the state is SUCCESS or
+  // ERROR.
+
+  optional int64 finished_usec = 9;
+  optional int32 return_status = 10;
+  optional string stdout = 11;
+  optional string stderr = 12;
+  optional double user_time = 13;
+  optional double system_time = 14;
+
+  // This is present only when the state is ERROR.
+  optional string error_details = 15;
+}
