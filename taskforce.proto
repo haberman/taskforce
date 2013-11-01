@@ -2,8 +2,8 @@
 package taskforce;
 
 message Task {
-  // Unique id for this task, hash of data therein.
-  optional string id = 1;
+  // Human-readable label for this task, must be unique within a TaskForce.
+  optional string label = 1;
 
   // Dependencies of this task.
   //
@@ -11,22 +11,46 @@ message Task {
   // contain "./" or "../".  However, they may start with "/".
   repeated string source = 2;
 
+  // File that lists dynamically-computed dependencies of this task.
+  // This task will depend on these files, but will also depend on
+  // any files listed in these files.
+  repeated string dynamic_source_file = 3;
+
   // Outputs of this task.
   //
   // These are file paths relative to the base of the tree, and they may not
   // contain "./" or "../", and may not start with "/" (all targets must be
   // within the tree).
-  repeated string target = 3;
+  repeated string target = 4;
 
   // The command to be run and all arguments.  These will be passed directly to
   // exec() and will not be interpreted by any shell.
   //
   // The current directory will be the base of the tree.
-  repeated string arg = 4;
+  repeated string arg = 5;
 
   // Environment variables in VAR=val format.  The environment will be
   // completely cleared except for the variables listed here.
-  repeated string env = 5;
+  repeated string env = 6;
+
+  // The file where stdout will be written.  This is only required if you want
+  // to refer to this file's stdout from another task.
+  optional string stdout_file = 7;
+}
+
+message TaskForce {
+  // Other TaskForce files that should be included as part of the build.
+  repeated string sub_taskforce = 1;
+
+  // Environment variables that apply to all Tasks in this TaskForce.
+  repeated string base_env = 2;
+
+  // Files that the TaskForce itself depends on; if these change, the
+  // TaskForce should be regenerated.
+  repeated string dependency = 3;
+
+  // The tasks that are part of this build.
+  repeated Task task = 4;
 }
 
 message Job {
