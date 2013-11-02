@@ -38,7 +38,7 @@ message Task {
   optional string stdout_file = 7;
 }
 
-message TaskForce {
+message TaskForceProto {
   // Other TaskForce files that should be included as part of the build.
   repeated string sub_taskforce = 1;
 
