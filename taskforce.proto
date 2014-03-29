@@ -9,19 +9,19 @@ message Task {
   //
   // These are file paths relative to the base of the tree, and they may not
   // contain "./" or "../".  However, they may start with "/".
-  repeated string source = 2;
+  repeated string input = 2;
 
-  // File that lists dynamically-computed dependencies of this task.
-  // This task will depend on these files, but will also depend on
-  // any files listed in these files.
-  repeated string dynamic_source_file = 3;
+  // File that contains dynamically-computed dependencies of this task.
+  // This task will depend on these files, but the file itself can also
+  // contain dynamically-computed dependencies of this task.
+  optional string dynamic_input_file = 3;
 
   // Outputs of this task.
   //
   // These are file paths relative to the base of the tree, and they may not
   // contain "./" or "../", and may not start with "/" (all targets must be
   // within the tree).
-  repeated string target = 4;
+  repeated string output = 4;
 
   // The command to be run and all arguments.  These will be passed directly to
   // exec() and will not be interpreted by any shell.
@@ -34,27 +34,22 @@ message Task {
   repeated string env = 6;
 
   // The file where stdout will be written.  This is only required if you want
-  // to refer to this file's stdout from another task.
+  // to refer to this file's stdout from another task.  May not be absolute.
   optional string stdout_file = 7;
+
+  // If true, the stdout should be a DependencyMap and other tasks can use
+  // this for their dynamically-generated dependencies.  Requires that
+  // stdout_file is set.
+  optional bool calculates_dependencies = 8;
 }
 
 message TaskForceProto {
-  // Other TaskForce files that should be included as part of the build.
-  repeated string sub_taskforce = 1;
-
-  // Environment variables that apply to all Tasks in this TaskForce.
-  repeated string base_env = 2;
-
-  // Files that the TaskForce itself depends on; if these change, the
-  // TaskForce should be regenerated.
-  repeated string dependency = 3;
-
-  // The tasks that are part of this build.
-  repeated Task task = 4;
+  // The tasks that are part of this TaskForce.
+  repeated Task task = 1;
 }
 
 message Job {
-  // Unique id for this job.  Hash of task id and source ids.
+  // Unique id for this job.  Hash of input.
   optional string id = 1;
 
   enum State {
@@ -66,36 +61,50 @@ message Job {
 
   optional State state = 2;
 
-  // Corresponding task id.
-  optional string task_id = 3;
+  message Input {
+    // Task for this job.
+    optional string task_id = 1;
 
-  // Ids of sources, array elements correspond to task.source.
-  repeated string source_id = 4;
+    // Files that were computed as dependencies of this job dynamically
+    // (ie as a function of the input file's content).
+    repeated string dynamic_inputs = 2;
 
-  // Ids of targets, array elements correspond to task.target.
+    // Ids of sources, array elements correspond to task.input followed
+    // by dynamic_inputs.
+    repeated string input_fingerprint = 3;
+  }
+
+  // Identifies the input associated with this job.
+  optional Input input = 3;
+
+  message Output {
+    // Ids of targets, array elements correspond to task.target.
+    repeated string output_fingerprint = 1;
+
+    // Present iff this task has calculates_dependencies=true.
+    optional DependencyMap dynamic_dependencies = 2;
+  }
+
   // Only present when state == SUCCESS.
-  repeated string target_id = 5;
+  optional Output output = 4;
 
-  // The time at which the job was created in state RUNNABLE.
-  optional int64 created_usec = 6;
+  message RunInfo {
+    optional int64 created_usec = 1;
+    optional int64 started_usec = 2;
+    optional int64 finished_usec = 3;
+    optional int32 pid = 4;
+    optional int32 return_status = 5;
+    // Not present if the Task has stdout_file set.
+    optional string stdout = 6;
+    optional string stderr = 7;
+    optional double user_time = 8;
+    optional double system_time = 9;
 
-  // Present unless the state is RUNNABLE, the time at which the task started
-  // running.
-  optional int64 started_usec = 7;
+    // An error message giving more information about how the task failed.
+    // Only present when state == ERROR.
+    optional string error_details = 10;
+  }
 
-  // Present only while the state is RUNNING.
-  optional int32 pid = 8;
-
-  // All of the following members are present when the state is SUCCESS or
-  // ERROR.
-
-  optional int64 finished_usec = 9;
-  optional int32 return_status = 10;
-  optional string stdout = 11;
-  optional string stderr = 12;
-  optional double user_time = 13;
-  optional double system_time = 14;
-
-  // This is present only when the state is ERROR.
-  optional string error_details = 15;
+  // Present unless state is RUNNABLE.
+  optional RunInfo run_info = 5;
 }

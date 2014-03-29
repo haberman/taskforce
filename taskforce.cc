@@ -231,3 +231,9 @@ bool TaskForce::Build() {
 }
 
 }  // namespace taskforce
+
+int main() {
+  TaskForceProto proto;
+
+  TaskForce tf;
+}
